@@ -4,8 +4,9 @@ import {BrowserRouter as Router, Switch, Route, Link, useParams, useRouteMatch} 
 import Admin from './component/Admin';
 import Home from './component/Home';
 import Movies from './component/Movies';
-import Categories from './component/Categories';
+import OneGenre from './component/OneGenre';
 import OneMovie from './component/OneMovie';
+import Genres from './Genres';
 export default function App() {
   return (
     <Router>
@@ -29,7 +30,7 @@ export default function App() {
                 <Link to="/movies">Movies</Link>
               </li>
               <li className="list-group-item">
-                <Link to="/by-categories">Categories</Link>
+                <Link to="/genres">Genres</Link>
               </li>
               <li className="list-group-item">
                 <Link to="/admin">Manage Catalogue</Link>
@@ -45,25 +46,12 @@ export default function App() {
             <Route path="/movies">
              <Movies/>
             </Route>
-            <Route exact path="/by-categories">
-              <CategoryPage />
+            <Route path="/genre/:id" component={OneGenre} />
+            <Route exact path="/genres">
+              <Genres />
             </Route>
            
-            <Route 
-            exact
-            path="/by-categories/drama"
-            render={(props) => <Categories {...props} title={`Drama`} />}
-            />
-
-            <Route 
-            exact
-            path="/by-categories/comedy"
-            render={(props) => <Categories {...props} title={`Comedy`} />}
-            />
-            
-            
-
-            <Route path="/admin">
+           <Route path="/admin">
               <Admin/>
             </Route>
             <Route path="/">
@@ -79,19 +67,3 @@ export default function App() {
 
 
 
-function CategoryPage(){
-  let {path,url}=useRouteMatch();
-
-  return(
-    <div>
-      <h2>Categories</h2>
-      <ul>
-        <li> <Link to={`${path}/drama`}>Drama</Link></li>
-        <li> <Link to={`${url}/comedy`}>Comedy</Link></li>
-     
-      </ul>
-
-
-    </div>
-  )
-}
