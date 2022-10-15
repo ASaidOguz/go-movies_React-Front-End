@@ -1,8 +1,12 @@
 import React, { Component, Fragment } from 'react'
+import { Link } from 'react-router-dom';
 import './EditMovie.css'
 import Input from './form-components/input';
 import InputArea from './form-components/InputArea';
 import Select from './form-components/Select';
+import Alert from './ui-components/Alert';
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 export default class EditMovie extends Component{
 
    
@@ -30,6 +34,11 @@ export default class EditMovie extends Component{
             ],
             isLoaded:false,
             error:null,
+            errors:[],
+            alert:{
+              type:"d-none",
+              message:""
+            }
           
         }
         this.handleChange=this.handleChange.bind(this)
@@ -37,9 +46,47 @@ export default class EditMovie extends Component{
     }
 
     handleSubmit=(evnt)=>{
-        console.log("Form was submitted!!")
-        evnt.preventDefault()
-    }
+      evnt.preventDefault()
+      //clint side validation for "title" field...
+      let errors =[]
+      if(this.state.movie.title===""){
+        errors.push("title")
+      }
+     
+
+      this.setState({errors:errors});
+      if(errors.length>0){
+        return false
+      }
+     
+     
+      //This is how we submit our form ....
+      //Default fetch is GET request , for post 
+      //You need to create options of request and add it as it shown below.
+      const data =new FormData(evnt.target)
+      const payload=Object.fromEntries(data.entries())
+      console.log(payload)
+      
+      const requestOptions={
+        method:"POST",
+        body:JSON.stringify(payload)
+      }
+      fetch("http://localhost:4000/v1/admin/editmovie",requestOptions)
+           .then((response)=>response.json())
+           .then((data)=>{
+            if(data.error) {
+              this.setState({
+                alert:{type:"alert-danger",
+                message:data.error.message},})
+              }
+               else{
+                   this.props.history.push({
+                  pathname:"/admin",
+              })
+              }
+            })
+          }
+              
     handleChange=(evnt)=>{
         let value=evnt.target.value;
         let name =evnt.target.name
@@ -49,6 +96,9 @@ export default class EditMovie extends Component{
                 [name]:value,
             }
         }))
+    }
+    hasError(key){
+      return this.state.errors.indexOf(key)!==-1
     }
     componentDidMount(){
         const id = this.props.match.params.id;
@@ -92,7 +142,38 @@ export default class EditMovie extends Component{
             this.setState({ isLoaded: true });
           }
     }
+confirmDelete=(e)=>{
+  console.log("would delete this movie id :",this.state.movie.id)
 
+  confirmAlert({
+    title: 'Delete The Movie',
+    message: 'Are you sure ?',
+    buttons: [
+      {
+        label: 'Yes',
+        onClick: () => {
+          fetch("http://localhost:4000/v1/admin/deletemovie/"+this.state.movie.id,{method:"GET"})
+          .then(response=>response.json())
+          .then((data)=>{
+            if (data.error){
+               this.setState({
+                alert:{type:"alert-danger",message:data.error.message}
+               })
+            }else{
+              this.props.history.push({
+                pathname:"/admin",
+              })
+            }
+          })
+        }
+      },
+      {
+        label: 'No',
+        onClick: () => {}
+      }
+    ]
+  })
+}
 
   render(){
     let { movie, isLoaded, error } = this.state;
@@ -105,6 +186,10 @@ export default class EditMovie extends Component{
      return(
         <Fragment>
             <h2>Add/Edit Movie</h2>
+            <Alert 
+             alertType={this.state.alert.type}
+             alertMessage={this.state.alert.message}
+            />
             <hr/>
             <form onSubmit={this.handleSubmit}>
               <input
@@ -117,10 +202,13 @@ export default class EditMovie extends Component{
            
              <Input
                title={"Title"}
+               className={this.hasError("title")?"is-invalid":""}
                type={"text"}
                name={'title'}
                value={movie.title}
                handleChange={this.handleChange}
+               errorDiv={this.hasError("title")?"text-danger":"d-none"}
+               errorMsg={"Please enter input for title"}
                />
           
             <Input
@@ -169,6 +257,12 @@ export default class EditMovie extends Component{
                   />
             <hr/>
             <button className='btn btn-primary'>Save</button>
+            <Link to="/admin" className='btn btn-warning ms-1'>Cancel</Link>
+            {movie.id>0 &&(
+                    <a href="#!" onClick={()=>{this.confirmDelete()}}
+                    className="btn btn-danger ms-1">Delete</a>)
+              
+            }
             </form>
             <div className='mt-3'>
             <pre>{JSON.stringify(this.state,null,3)}</pre>
