@@ -9,6 +9,7 @@ import OneMovie from './component/OneMovie';
 import Genres from './Genres';
 import EditMovie from './component/EditMovie';
 import Login from './component/Login';
+import Graphql from './component/Graphql';
 export default class App extends Component {
   constructor(props){
    super(props)
@@ -17,12 +18,20 @@ export default class App extends Component {
     }
     this.handleJWTchange(this.handleJWTchange.bind(this))
   }
-
+  componentDidMount(){
+    let t=window.localStorage.getItem("jwt")
+    if(t){
+      if(this.state.jwt===""){
+        this.setState({jwt:JSON.parse(t)})
+      }
+    }
+  }
   handleJWTchange=(jwt)=>{
     this.setState({jwt:jwt})
   }
   logout=()=>{
-    this.setState({jwt:""})
+    this.setState({jwt:""});
+    window.localStorage.removeItem("jwt");
   }
   render(){
     let loginLink;
@@ -73,7 +82,14 @@ export default class App extends Component {
               </li>
               </Fragment>
                 }
+                <li className='list-group-item'>
+                 <Link to="/graphql">Graphql</Link>
+                </li>
             </ul>
+
+            <pre>
+              {JSON.stringify(this.state,null,3)}
+            </pre>
           </nav>
         </div>
 
@@ -85,15 +101,19 @@ export default class App extends Component {
              <Movies/>
             </Route>
             <Route path="/genre/:id" component={OneGenre} />
-            <Route exact path="/login" component={(props)=><Login {...props} handleJWTchange={this.handleJWTchange}/>}/>
+            <Route exact path="/login" component={(props)=>
+                  <Login {...props} handleJWTchange={this.handleJWTchange}/>}/>
             
             <Route exact path="/genres">
               <Genres />
             </Route>
-           <Route path="/admin/movie/:id" component={EditMovie}/>
-           <Route path="/admin">
-              <Admin/>
+            <Route exact path="/graphql">
+              <Graphql/>
             </Route>
+           <Route path="/admin/movie/:id" component={(props)=>
+                   <EditMovie{...props} jwt={this.state.jwt}/>}/>
+           <Route path="/admin" component=
+           {(props)=><Admin{...props}jwt={this.state.jwt}/>}/> 
             <Route path="/">
              <Home/>
             </Route>
