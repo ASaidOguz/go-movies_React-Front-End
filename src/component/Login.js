@@ -51,28 +51,36 @@ export default class Login extends Component {
 
     const data = new FormData(evt.target);
     const payload = Object.fromEntries(data.entries());
-
+    
     const requestOptions = {
         method: "POST",
         body: JSON.stringify(payload),
     }
 
     fetch("http://localhost:4000/v1/signin", requestOptions)
-    .then((response) => response.json())
-    .then((data) => {
-        if (data.error) {
-            this.setState({
-                alert: {
-                    type: "alert-danger",
-                    message: data.error.message,
-                }
-            })
-        } else {
-            console.log(data);
-        }
-    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.error) {
+                this.setState({
+                    alert: {
+                        type: "alert-danger",
+                        message: data.error.message,
+                    }
+                })
+            } else {
+                console.log(data);
+                this.handleJWTchange(Object.values(data)[0]);
+                window.localStorage.setItem("jwt",JSON.stringify(Object.values(data)[0]))
+                this.props.history.push({
+                  pathname:"/admin",
+                })
+            }
+        })
 
-};
+  };
+  handleJWTchange(jwt){
+    this.props.handleJWTchange(jwt);
+  }
 
   hasError(key) {
     return this.state.errors.indexOf(key) !== -1;
